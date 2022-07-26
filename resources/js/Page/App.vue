@@ -6,13 +6,14 @@
             Please enter a message that will be sent to the clients (this web
             application and android application) via Laravel Echo.
         </p>
-        <form id="newMessageForm" @submit="increment">
+        <form id="newMessageForm" @submit="onSubmit">
             <div class="form-group">
                 <label for="messageInput">Message</label>
                 <input
                     type="text"
                     class="form-control"
                     id="messageInput"
+                    name="message"
                     placeholder="Enter some message"
                 />
             </div>
@@ -22,7 +23,9 @@
             <br /><br />
             <div class="form-group">
                 <label for="messagesList">Received messages:</label>
-                <ul id="messagesList" class="list-group"></ul>
+                <ul class="list-group">
+                    <li v-for="message in messages">{{ message }}</li>
+                </ul>
             </div>
         </form>
     </main>
@@ -32,19 +35,23 @@
 export default {
     data() {
         return {
-            names: [],
+            messages: [],
         };
     },
     mounted() {
         let that = this;
         Echo.channel("message").listen("MessageCreated", (data) => {
-            that.names.push(data.message);
+            that.messages.push(data.message);
         });
     },
     methods: {
-        increment(event) {
+        onSubmit(event) {
             event.preventDefault();
-            fetch("/api/messages");
+            const _message = event.currentTarget.message.value;
+            if (!_message) return;
+            const _data = new URLSearchParams();
+            _data.append("message", _message);
+            fetch("/api/message", { method: "POST", body: _data });
         },
     },
 };
